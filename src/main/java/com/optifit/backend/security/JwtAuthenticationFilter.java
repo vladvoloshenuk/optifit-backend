@@ -1,5 +1,6 @@
 package com.optifit.backend.security;
 
+import com.optifit.backend.enums.Role;
 import com.optifit.backend.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -41,14 +42,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
         String email = jwtService.extractEmail(token);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (email != null) {
 
             var appUser = userRepository.findByEmail(email).orElse(null);
 
             if (appUser != null && jwtService.isTokenValid(token, email)) {
 
+                Role role = appUser.getRole() != null ? appUser.getRole() : Role.USER;
+
                 var authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + appUser.getRole().name())
+                        new SimpleGrantedAuthority("ROLE_" + role.name())
                 );
 
                 User userDetails = new User(
